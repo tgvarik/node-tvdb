@@ -37,11 +37,11 @@ class Client {
      * @param {String} [language]
      */
 
-    constructor(apiKey, language) {
+    constructor(apiKey, language, baseUrl) {
         if (!apiKey) {
             throw new Error('API key is required');
         }
-
+        this.baseUrl = baseUrl || BASE_URL;
         this.apiKey = apiKey;
         this.language = language || 'en';
 
@@ -50,7 +50,7 @@ class Client {
 
         this.getToken = function() {
             if (tokenPromise === undefined) {
-                tokenPromise = logIn(this.apiKey);
+                tokenPromise = logIn(this.apiKey, this.baseUrl);
             }
 
             return tokenPromise;
@@ -375,7 +375,7 @@ class Client {
             .then(token => {
                 headers['Authorization'] = `Bearer ${token}`;
 
-                return request(`${BASE_URL}/${path}`, { headers: headers });
+                return request(`${this.baseUrl}/${path}`, { headers: headers });
             })
             .then(res => checkHttpError(res))
             .then(res => checkJsonError(res))
@@ -464,7 +464,7 @@ function checkJsonError(res) {
  * @private
  */
 
-function logIn(apiKey) {
+function logIn(apiKey, baseUrl) {
     const opts = {
         method: 'POST',
         body: JSON.stringify({ apikey: apiKey }),
@@ -474,7 +474,7 @@ function logIn(apiKey) {
         }
     };
 
-    return request(`${BASE_URL}/login`, opts)
+    return request(`${baseUrl}/login`, opts)
         .then(res => checkHttpError(res))
         .then(res => checkJsonError(res))
         .then(json => json.token);
